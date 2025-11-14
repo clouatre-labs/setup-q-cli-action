@@ -14,31 +14,34 @@ GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/a
 name: AI Code Review
 on: [pull_request]
 
+permissions:
+  id-token: write      # Required for OIDC
+  contents: read
+  pull-requests: write
+
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+          aws-region: us-east-1
+      
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
       
-      - name: Generate code review
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Generate and post code review
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          qchat chat --no-interactive "Review this diff for bugs: $(cat changes.diff)" > review.md
+          qchat chat --no-interactive "Review this diff: $(cat changes.diff)" > review.md
       
-      - name: Post review as PR comment
-        uses: actions/github-script@v7
+      - uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
@@ -86,27 +89,43 @@ jobs:
 
 ## Authentication Methods
 
-### Method 1: SIGV4 Authentication (IAM)
+### Method 1: OIDC (Recommended for GitHub Actions)
 
-SIGV4 authentication uses AWS IAM credentials for headless operation in CI/CD.
+Uses GitHub's OIDC provider for secure, credential-free authentication.
 
-**Discovered feature:** `AMAZON_Q_SIGV4` environment variable (added in commit [42b16763](https://github.com/aws/amazon-q-developer-cli/commit/42b16763), June 2025).
+**One-time AWS Setup:**
 
-```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
-  with:
-    enable-sigv4: true
-    aws-region: ca-central-1
-
-- name: Use Q CLI with IAM credentials
-  env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  run: |
-    qchat chat --no-interactive "What is 2+2?"
+1. Create OIDC provider:
+```bash
+aws iam create-open-id-connect-provider \
+  --url https://token.actions.githubusercontent.com \
+  --client-id-list sts.amazonaws.com \
+  --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
 ```
 
-**Required IAM Permissions:**
+2. Create IAM role with trust policy:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+      },
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": "repo:<ORG>/*:*"
+      }
+    }
+  }]
+}
+```
+
+3. Attach Q Developer policy:
 ```json
 {
   "Version": "2012-10-17",
@@ -122,77 +141,56 @@ SIGV4 authentication uses AWS IAM credentials for headless operation in CI/CD.
 }
 ```
 
-**Reference:** [AWS Q Developer IAM Permissions](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/security_iam_permissions.html)
-
-### Method 2: Standard AWS Authentication
-
-Q CLI respects the standard AWS credential chain:
-- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-- AWS profiles (`AWS_PROFILE`)
-- IAM roles (when running on EC2, ECS, Lambda)
-
+**Workflow usage:**
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+permissions:
+  id-token: write  # Required for OIDC
 
 - uses: aws-actions/configure-aws-credentials@v4
   with:
-    role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsRole
+    role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
     aws-region: us-east-1
 
-- name: Use Q CLI
-  run: qchat chat --no-interactive "Review this code"
+- uses: clouatre-labs/setup-q-cli-action@v1
+  with:
+    enable-sigv4: true  # Required with OIDC
 ```
+
+**Benefits:**
+- No long-lived credentials in GitHub Secrets
+- Automatic token rotation (1-hour sessions)
+- Scope to specific repos/branches
+- AWS security best practice
+
+### Method 2: IAM User Credentials (Local Development)
+
+For local testing or non-GitHub CI/CD environments.
+
+```yaml
+- uses: clouatre-labs/setup-q-cli-action@v1
+  # Do NOT set enable-sigv4 with long-lived credentials
+
+- name: Use Q CLI
+  env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_REGION: us-east-1
+  run: qchat chat --no-interactive "What is 2+2?"
+```
+
+**Important:** SIGV4 mode requires temporary credentials (session token). Do not use `enable-sigv4: true` with IAM user credentials (AKIA* keys).
 
 ## Examples
 
-### Example 1: Post Code Review as PR Comment
-
-```yaml
-name: AI Code Review
-on: [pull_request]
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - uses: clouatre-labs/setup-q-cli-action@v1
-        with:
-          enable-sigv4: true
-      
-      - name: Generate code review
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          qchat chat --no-interactive "Review this diff for bugs, security issues, and best practices: $(cat changes.diff)" > review.md
-      
-      - name: Post review as PR comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const review = fs.readFileSync('review.md', 'utf8');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## AI Code Review\n\n${review}`
-            });
-```
-
-### Example 2: Save Security Scan as Artifact
+### Security Scan with Artifact Upload
 
 ```yaml
 name: Security Scan
 on: [push]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   scan:
@@ -200,36 +198,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+          aws-region: us-east-1
+      
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
       
-      - name: Scan for security issues
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Scan files
         run: |
           mkdir -p reports
-          find . -name "*.py" -o -name "*.js" -o -name "*.tf" | while read file; do
-            echo "Scanning $file..." >&2
-            qchat chat --no-interactive "Analyze this file for security vulnerabilities: $(cat $file)" >> reports/security-scan.txt
-            echo -e "\n---\n" >> reports/security-scan.txt
+          find . -name "*.py" -o -name "*.js" | head -5 | while read file; do
+            qchat chat --no-interactive "Security review: $(cat $file)" >> reports/scan.txt
+            echo -e "\n---\n" >> reports/scan.txt
           done
       
-      - name: Upload scan results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: security-scan-results
+          name: security-scan
           path: reports/
           retention-days: 30
 ```
 
-### Example 3: Pin to Specific Version
+### Pin to Specific Version
 
 ```yaml
 - uses: clouatre-labs/setup-q-cli-action@v1
   with:
-    version: '1.19.6'  # Accepts with or without 'v' prefix
+    version: '1.19.6'
     verify-checksum: true  # Recommended for production
 ```
 
