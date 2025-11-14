@@ -90,7 +90,7 @@ runs:
             echo "::error::SHA256 mismatch! Expected: $EXPECTED_SHA, Got: $ACTUAL_SHA"
             exit 1
           fi
-          echo "✅ SHA256 verification passed"
+          echo "SHA256 verification passed"
         fi
         
         unzip -q q.zip

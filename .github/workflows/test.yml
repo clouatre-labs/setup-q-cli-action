@@ -34,23 +34,6 @@ jobs:
           which qterm
           q --help
 
-  test-ubuntu-arm64:
-    name: Test on Ubuntu ARM64
-    runs-on: ubuntu-24.04-arm64
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Test action
-        uses: ./
-        with:
-          version: latest
-
-      - name: Verify installation
-        run: |
-          q --version
-          which q
-
   test-cache:
     name: Test caching
     runs-on: ubuntu-latest

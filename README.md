@@ -17,29 +17,46 @@ on: [pull_request]
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
-          aws-region: us-east-1
       
-      - name: Run Q CLI
+      - name: Generate code review
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          q chat --no-interactive "Review this code for security issues"
+          git diff origin/${{ github.base_ref }}...HEAD > changes.diff
+          q chat --no-interactive "Review this diff for bugs: $(cat changes.diff)" > review.md
+      
+      - name: Post review as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('review.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## AI Code Review\n\n${review}`
+            });
 ```
 
 ## Features
 
 - **Automatic caching** - Caches Q CLI binaries for faster subsequent runs
-- **SIGV4 authentication** - Optional IAM-based authentication (undocumented feature)
-- **Linux support** - Supports x64 and arm64 architectures
+- **SIGV4 authentication** - IAM-based headless authentication for CI/CD
+- **GitHub-hosted runners** - Supports x64 Ubuntu runners (simple, fast, manageable)
 - **Lightweight** - Composite action with no external dependencies
-- **Multiple binaries** - Installs `q`, `qchat`, and `qterm`
 
 ## Inputs
 
@@ -59,14 +76,13 @@ jobs:
 
 ## Supported Platforms
 
-| OS | Architecture | Status |
-|----|--------------|--------|
-| Ubuntu | x64 | ✅ Supported |
-| Ubuntu | arm64 | ✅ Supported |
-| macOS | - | ❌ Not supported |
-| Windows | - | ❌ Not supported |
+**GitHub-hosted runners only** - Designed for simple, fast, manageable CI/CD.
 
-**Note:** macOS binaries are not available via AWS CDN (403 Forbidden). macOS users should install Q CLI using official AWS methods.
+| OS | Architecture | Runner Label |
+|----|--------------|--------------|
+| Ubuntu | x64 | `ubuntu-latest`, `ubuntu-24.04`, `ubuntu-22.04` |
+
+**Not supported:** macOS, Windows (binaries not available via AWS CDN). Self-hosted ARM64 runners may work but are untested.
 
 ## Authentication Methods
 
@@ -129,15 +145,18 @@ Q CLI respects the standard AWS credential chain:
 
 ## Examples
 
-### Example 1: Basic Code Review
+### Example 1: Post Code Review as PR Comment
 
 ```yaml
-name: Q CLI Code Review
+name: AI Code Review
 on: [pull_request]
 
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -147,23 +166,36 @@ jobs:
         with:
           enable-sigv4: true
       
-      - name: Generate and review diff
+      - name: Generate code review
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          q chat --no-interactive "Review this diff for bugs: $(cat changes.diff)"
+          q chat --no-interactive "Review this diff for bugs, security issues, and best practices: $(cat changes.diff)" > review.md
+      
+      - name: Post review as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('review.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## AI Code Review\n\n${review}`
+            });
 ```
 
-### Example 2: Terraform Security Scan
+### Example 2: Save Security Scan as Artifact
 
 ```yaml
-name: Terraform Security Review
+name: Security Scan
 on: [push]
 
 jobs:
-  security-scan:
+  scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -171,39 +203,35 @@ jobs:
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
-          aws-region: ca-central-1
       
-      - name: Scan Terraform files
+      - name: Scan for security issues
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          for file in $(find . -name "*.tf"); do
-            echo "Scanning $file..."
-            q chat --no-interactive "Review this Terraform for security issues: $(cat $file)"
+          mkdir -p reports
+          find . -name "*.py" -o -name "*.js" -o -name "*.tf" | while read file; do
+            echo "Scanning $file..." >&2
+            q chat --no-interactive "Analyze this file for security vulnerabilities: $(cat $file)" >> reports/security-scan.txt
+            echo -e "\n---\n" >> reports/security-scan.txt
           done
+      
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: reports/
+          retention-days: 30
 ```
 
-### Example 3: Using Specific Version
+### Example 3: Pin to Specific Version
 
 ```yaml
 - uses: clouatre-labs/setup-q-cli-action@v1
   with:
-    version: '1.19.6'  # Pin to specific version (no 'v' prefix needed)
+    version: '1.19.6'  # Accepts with or without 'v' prefix
+    verify-checksum: true  # Recommended for production
 ```
-
-**Note:** The action accepts versions with or without the 'v' prefix (e.g., both `1.19.6` and `v1.19.6` work). The AWS CDN uses versions without the prefix.
-
-### Example 4: With SHA256 Verification
-
-```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
-  with:
-    version: '1.19.6'
-    verify-checksum: true  # Adds ~2s on first install, 0s on cache hits
-```
-
-**When to use:** Enable for security-sensitive environments or compliance requirements. Verification is skipped when using cached binaries.
 
 ## How It Works
 
