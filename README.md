@@ -35,7 +35,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          q chat --no-interactive "Review this diff for bugs: $(cat changes.diff)" > review.md
+          qchat chat --no-interactive "Review this diff for bugs: $(cat changes.diff)" > review.md
       
       - name: Post review as PR comment
         uses: actions/github-script@v7
@@ -103,7 +103,7 @@ SIGV4 authentication uses AWS IAM credentials for headless operation in CI/CD.
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   run: |
-    q chat --no-interactive "What is 2+2?"
+    qchat chat --no-interactive "What is 2+2?"
 ```
 
 **Required IAM Permissions:**
@@ -140,7 +140,7 @@ Q CLI respects the standard AWS credential chain:
     aws-region: us-east-1
 
 - name: Use Q CLI
-  run: q chat --no-interactive "Review this code"
+  run: qchat chat --no-interactive "Review this code"
 ```
 
 ## Examples
@@ -172,7 +172,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          q chat --no-interactive "Review this diff for bugs, security issues, and best practices: $(cat changes.diff)" > review.md
+          qchat chat --no-interactive "Review this diff for bugs, security issues, and best practices: $(cat changes.diff)" > review.md
       
       - name: Post review as PR comment
         uses: actions/github-script@v7
@@ -212,7 +212,7 @@ jobs:
           mkdir -p reports
           find . -name "*.py" -o -name "*.js" -o -name "*.tf" | while read file; do
             echo "Scanning $file..." >&2
-            q chat --no-interactive "Analyze this file for security vulnerabilities: $(cat $file)" >> reports/security-scan.txt
+            qchat chat --no-interactive "Analyze this file for security vulnerabilities: $(cat $file)" >> reports/security-scan.txt
             echo -e "\n---\n" >> reports/security-scan.txt
           done
       
@@ -236,13 +236,15 @@ jobs:
 ## How It Works
 
 1. Checks if running on Linux (macOS not supported)
-2. Checks cache for Q CLI binaries matching version and platform
+2. Checks cache for Q CLI binary matching version and platform
 3. If cache miss, downloads from AWS CDN: `https://desktop-release.q.us-east-1.amazonaws.com/{version}/q-{arch}-linux.zip`
 4. Optionally verifies SHA256 checksum (if `verify-checksum: true`)
-5. Extracts and installs binaries (`q`, `qchat`, `qterm`) to `~/.local/bin/`
+5. Extracts and installs `qchat` binary to `~/.local/bin/`
 6. Adds binary location to `$GITHUB_PATH`
 7. Optionally configures SIGV4 authentication
-8. Verifies installation with `q --version`
+8. Verifies installation with `qchat --version`
+
+**Note:** Only the `qchat` binary is installed (130MB). This is sufficient for CI/CD use cases. The `q` wrapper (99MB) and `qterm` (74MB) are not needed for automated workflows.
 
 ## Cache Key Format
 
@@ -256,11 +258,11 @@ Example: `q-latest-Linux-X64`
 
 ### Binary not found after installation
 
-Ensure you're using the action before attempting to run `q`:
+Ensure you're using the action before attempting to run `qchat`:
 
 ```yaml
 - uses: clouatre-labs/setup-q-cli-action@v1
-- run: q --version  # This will work
+- run: qchat --version  # This will work
 ```
 
 ### SIGV4 authentication not working

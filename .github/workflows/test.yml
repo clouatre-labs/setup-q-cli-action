@@ -25,14 +25,12 @@ jobs:
         run: |
           echo "Q version: ${{ steps.q.outputs.q-version }}"
           echo "Q path: ${{ steps.q.outputs.q-path }}"
-          q --version
+          qchat --version
 
-      - name: Test q command
+      - name: Test qchat command
         run: |
-          which q
           which qchat
-          which qterm
-          q --help
+          qchat --help
 
   test-cache:
     name: Test caching
@@ -56,8 +54,7 @@ jobs:
 
       - name: Verify cache worked
         run: |
-          q --version
-          qchat --version || echo "qchat version check skipped"
+          qchat --version
 
   test-sigv4-config:
     name: Test SIGV4 configuration
@@ -84,7 +81,7 @@ jobs:
             exit 1
           fi
           echo "SIGV4 configuration verified"
-          q --version
+          qchat --version
 
   test-checksum-verification:
     name: Test SHA256 verification
@@ -101,7 +98,7 @@ jobs:
 
       - name: Verify installation
         run: |
-          q --version
+          qchat --version
           echo "Checksum verification passed"
 
   test-platform-check:
