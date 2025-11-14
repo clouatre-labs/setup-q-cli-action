@@ -1,6 +1,7 @@
 # Setup Q CLI Action
 
 [![Test Action](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml/badge.svg)](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Setup%20Q%20CLI-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/setup-q-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/clouatre-labs/setup-q-cli-action)](https://github.com/clouatre-labs/setup-q-cli-action/releases/latest)
 
