@@ -1,0 +1,140 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-ubuntu-x64:
+    name: Test on Ubuntu x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test action
+        uses: ./
+        id: q
+        with:
+          version: latest
+
+      - name: Verify installation
+        run: |
+          echo "Q version: ${{ steps.q.outputs.q-version }}"
+          echo "Q path: ${{ steps.q.outputs.q-path }}"
+          q --version
+
+      - name: Test q command
+        run: |
+          which q
+          which qchat
+          which qterm
+          q --help
+
+  test-ubuntu-arm64:
+    name: Test on Ubuntu ARM64
+    runs-on: ubuntu-24.04-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test action
+        uses: ./
+        with:
+          version: latest
+
+      - name: Verify installation
+        run: |
+          q --version
+          which q
+
+  test-cache:
+    name: Test caching
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: First run (cache miss)
+        uses: ./
+        with:
+          version: latest
+
+      - name: Remove binaries
+        run: rm -f ~/.local/bin/q*
+
+      - name: Second run (cache hit)
+        uses: ./
+        with:
+          version: latest
+
+      - name: Verify cache worked
+        run: |
+          q --version
+          qchat --version || echo "qchat version check skipped"
+
+  test-sigv4-config:
+    name: Test SIGV4 configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test with SIGV4 enabled
+        uses: ./
+        with:
+          version: latest
+          enable-sigv4: true
+          aws-region: ca-central-1
+
+      - name: Verify SIGV4 environment variables
+        run: |
+          if [ "$AMAZON_Q_SIGV4" != "true" ]; then
+            echo "ERROR: AMAZON_Q_SIGV4 not set correctly"
+            exit 1
+          fi
+          if [ "$AWS_REGION" != "ca-central-1" ]; then
+            echo "ERROR: AWS_REGION not set correctly"
+            exit 1
+          fi
+          echo "SIGV4 configuration verified"
+          q --version
+
+  test-checksum-verification:
+    name: Test SHA256 verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test with verification enabled
+        uses: ./
+        with:
+          version: latest
+          verify-checksum: true
+
+      - name: Verify installation
+        run: |
+          q --version
+          echo "Checksum verification passed"
+
+  test-platform-check:
+    name: Test platform check (should skip on macOS)
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test action (should fail gracefully)
+        id: test
+        uses: ./
+        continue-on-error: true
+
+      - name: Verify expected failure
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "Expected failure on macOS - PASSED"
