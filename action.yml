@@ -6,7 +6,7 @@ inputs:
   version:
     description: 'Q CLI version to install (e.g., latest)'
     required: false
-    default: 'latest'
+    default: '1.19.6'
   aws-region:
     description: 'AWS region for Q CLI operations'
     required: false
