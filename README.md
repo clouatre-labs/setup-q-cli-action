@@ -66,7 +66,7 @@ jobs:
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `version` | Q CLI version to install | No | `latest` |
+| `version` | Q CLI version to install | No | `1.19.6` |
 | `aws-region` | AWS region for Q CLI operations | No | `us-east-1` |
 | `enable-sigv4` | Enable SIGV4 authentication mode | No | `false` |
 | `verify-checksum` | Verify SHA256 checksum of downloaded binary | No | `false` |
@@ -228,8 +228,19 @@ jobs:
 ```yaml
 - uses: clouatre-labs/setup-q-cli-action@v1
   with:
-    version: '1.19.6'
+    version: '1.18.0'  # Use any specific version
     verify-checksum: true  # Recommended for production
+```
+
+## Version Management
+
+This action defaults to a tested version that's automatically updated weekly.
+
+**Pin to a specific version:**
+```yaml
+- uses: clouatre-labs/setup-q-cli-action@v1
+  with:
+    version: '1.18.0'
 ```
 
 ## How It Works
