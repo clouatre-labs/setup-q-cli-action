@@ -40,18 +40,10 @@ jobs:
           # Update action.yml
           yq -i ".inputs.version.default = \"$LATEST\"" action.yml
           
-          # Update README.md (Inputs table only)
-          sed -i "s/| \`version\` | Q CLI version to install | No | \`${CURRENT}\` |/| \`version\` | Q CLI version to install | No | \`${LATEST}\` |/" README.md
-          
-          # Verify updates
+          # Verify update
           UPDATED_ACTION=$(yq '.inputs.version.default' action.yml)
           if [[ "$UPDATED_ACTION" != "$LATEST" ]]; then
             echo "Error: action.yml update failed. Expected $LATEST, got $UPDATED_ACTION"
-            exit 1
-          fi
-          
-          if ! grep -q "\`${LATEST}\`" README.md; then
-            echo "Error: README.md update failed. Version $LATEST not found"
             exit 1
           fi
           
@@ -59,7 +51,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b update-version-${LATEST}
-          git add action.yml README.md
+          git add action.yml
           git commit -m "chore: update default version to ${LATEST}"
           git push origin update-version-${LATEST}
           
@@ -73,7 +65,8 @@ jobs:
           **Release notes:** https://github.com/aws/amazon-q-developer-cli/releases/tag/v${LATEST}
           
           ### Changes
-          - Updates default version in \`action.yml\` and \`README.md\`
+          - Updates default version in \`action.yml\`
+          - README automatically reflects new version (links to action.yml)
           - Cache keys will automatically use new version
           - Users without explicit version will get ${LATEST}
           
