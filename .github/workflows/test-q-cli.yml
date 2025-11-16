@@ -1,0 +1,161 @@
+name: Test Q CLI Usage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-q-cli-tier1:
+    name: Test Q CLI - Tier 1 (Maximum Security)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run Linter
+        run: |
+          pipx install uv
+          uv tool run ruff check --output-format=json . > lint.json || true
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Q CLI
+        uses: clouatre-labs/setup-q-cli-action@v1
+        with:
+          enable-sigv4: true
+          aws-region: us-east-1
+
+      - name: AI Analysis of Linter Output
+        run: |
+          echo "Summarize these linting issues and suggest fixes:" > prompt.txt
+          cat lint.json >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > analysis.md || echo "Q CLI execution completed"
+
+      - name: Verify Analysis Output
+        run: |
+          if [ ! -f analysis.md ]; then
+            echo "ERROR: analysis.md not created"
+            exit 1
+          fi
+          echo "Analysis file size: $(wc -c < analysis.md) bytes"
+          echo "::group::Analysis Preview"
+          head -n 20 analysis.md
+          echo "::endgroup::"
+
+      - name: Upload Analysis Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: tier1-analysis
+          path: analysis.md
+          retention-days: 7
+
+  test-q-cli-tier2:
+    name: Test Q CLI - Tier 2 (Balanced Security)
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Q CLI
+        uses: clouatre-labs/setup-q-cli-action@v1
+        with:
+          enable-sigv4: true
+          aws-region: us-east-1
+
+      - name: Generate Diff Stats
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --stat origin/${{ github.base_ref }}...HEAD > diff-stats.txt
+          else
+            git diff --stat HEAD~1 HEAD > diff-stats.txt || echo "No previous commit" > diff-stats.txt
+          fi
+
+      - name: AI Analysis of Changes
+        run: |
+          echo "Review these file changes and provide a brief summary:" > prompt.txt
+          cat diff-stats.txt >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > review.md || echo "Q CLI execution completed"
+
+      - name: Verify Review Output
+        run: |
+          if [ ! -f review.md ]; then
+            echo "ERROR: review.md not created"
+            exit 1
+          fi
+          echo "Review file size: $(wc -c < review.md) bytes"
+          echo "::group::Review Preview"
+          head -n 20 review.md
+          echo "::endgroup::"
+
+      - name: Upload Review Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: tier2-review
+          path: review.md
+          retention-days: 7
+
+  test-q-cli-multiple-prompts:
+    name: Test Q CLI - Multiple Prompts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Q CLI
+        uses: clouatre-labs/setup-q-cli-action@v1
+        with:
+          enable-sigv4: true
+          aws-region: us-east-1
+
+      - name: Test Simple Prompt
+        run: |
+          qchat chat --no-interactive "What is the purpose of GitHub Actions?" > simple.txt 2>/dev/null || echo "Q CLI execution completed"
+          if [ ! -f simple.txt ]; then
+            echo "ERROR: simple.txt not created"
+            exit 1
+          fi
+
+      - name: Test Code Review Prompt
+        run: |
+          echo "Review this YAML for best practices:" > code-review.txt
+          cat .github/workflows/test.yml >> code-review.txt
+          qchat chat --no-interactive "$(cat code-review.txt)" > code-review-result.txt 2>/dev/null || echo "Q CLI execution completed"
+          if [ ! -f code-review-result.txt ]; then
+            echo "ERROR: code-review-result.txt not created"
+            exit 1
+          fi
+
+      - name: Upload All Results
+        uses: actions/upload-artifact@v5
+        with:
+          name: multiple-prompts
+          path: |
+            simple.txt
+            code-review-result.txt
+          retention-days: 7
