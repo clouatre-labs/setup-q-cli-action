@@ -2,6 +2,14 @@ name: 'Setup Q CLI'
 description: 'Install and cache Amazon Q Developer CLI for GitHub Actions workflows'
 author: 'Hugues Clouâtre'
 
+keywords:
+  - ai
+  - amazon-q
+  - q-developer
+  - aws
+  - cli
+  - automation
+
 inputs:
   version:
     description: 'Q CLI version to install (e.g., latest)'
