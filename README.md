@@ -32,9 +32,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Run Linter
-        run: |
-          pipx install uv
-          uv tool run ruff check --output-format=json . > lint.json || true
+        run: pipx run ruff check --output-format=json . > lint.json || true
 
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -164,7 +162,7 @@ permissions:
 
 - uses: aws-actions/configure-aws-credentials@v4
   with:
-    role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+    role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
     aws-region: us-east-1
 
 - uses: clouatre-labs/setup-q-cli-action@v1
@@ -197,46 +195,6 @@ For local testing or non-GitHub CI/CD environments.
 **Important:** SIGV4 mode requires temporary credentials (session token). Do not use `enable-sigv4: true` with IAM user credentials (AKIA* keys).
 
 ## Examples
-
-### Security Scan with Artifact Upload
-
-```yaml
-name: Security Scan
-on: [push]
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
-          aws-region: us-east-1
-      
-      - uses: clouatre-labs/setup-q-cli-action@v1
-        with:
-          enable-sigv4: true
-      
-      - name: Scan files
-        run: |
-          mkdir -p reports
-          find . -name "*.py" -o -name "*.js" | head -5 | while read file; do
-            qchat chat --no-interactive "Security review: $(cat $file)" >> reports/scan.txt
-            echo -e "\n---\n" >> reports/scan.txt
-          done
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: security-scan
-          path: reports/
-          retention-days: 30
-```
 
 ### Pin to Specific Version
 
