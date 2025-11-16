@@ -11,51 +11,54 @@ GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/a
 
 ## Quick Start
 
-> [!WARNING]
-> AI tools can be manipulated via code comments and commit messages. This example analyzes diffs directly. See [examples/](examples/) for safer patterns.
+> [!IMPORTANT]
+> **Prompt Injection Risk:** When AI analyzes user-controlled input (git diffs, code comments, commit messages), malicious actors can embed instructions to manipulate output. This applies to ANY AI tool, not just Q CLI or this action.
+> 
+> For production use, see [examples/](examples/) for defensive patterns (tool output analysis, input sanitization, trusted-only execution).
 
 ```yaml
-name: AI Code Review
-on: [pull_request]
+name: Linter Analysis with Q CLI
+on: [push]
 
 permissions:
-  id-token: write      # Required for OIDC
+  id-token: write
   contents: read
-  pull-requests: write
 
 jobs:
-  review:
+  analyze:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run Linter
+        run: |
+          pipx install uv
+          uv tool run ruff check --output-format=json . > lint.json || true
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          fetch-depth: 0
-      
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
-      
-      - uses: clouatre-labs/setup-q-cli-action@v1
+
+      - name: Setup Q CLI
+        uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
-      
-      - name: Generate and post code review
+          aws-region: us-east-1
+
+      - name: AI Analysis of Linter Output
         run: |
-          git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          qchat chat --no-interactive "Review this diff: $(cat changes.diff)" > review.md
-      
-      - uses: actions/github-script@v7
+          echo "Summarize these linting issues and suggest fixes:" > prompt.txt
+          cat lint.json >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" > analysis.md
+
+      - name: Upload Analysis Artifact
+        uses: actions/upload-artifact@v5
         with:
-          script: |
-            const fs = require('fs');
-            const review = fs.readFileSync('review.md', 'utf8');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## AI Code Review\n\n${review}`
-            });
+          name: ai-analysis
+          path: analysis.md
 ```
 
 ## Features
