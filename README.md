@@ -11,6 +11,9 @@ GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/a
 
 ## Quick Start
 
+> [!WARNING]
+> AI tools can be manipulated via code comments and commit messages. This example analyzes diffs directly. See [examples/](examples/) for safer patterns.
+
 ```yaml
 name: AI Code Review
 on: [pull_request]
@@ -61,6 +64,15 @@ jobs:
 - **SIGV4 authentication** - IAM-based headless authentication for CI/CD
 - **GitHub-hosted runners** - Supports x64 Ubuntu runners (simple, fast, manageable)
 - **Lightweight** - Composite action with no external dependencies
+
+## Security
+
+**Safe Pattern:** AI analyzes tool output (ruff, trivy, semgrep), not raw code.
+
+**Unsafe Pattern:** AI analyzes git diffs directly → vulnerable to prompt injection.
+
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.  
+See [examples/](examples/) for different security tiers.
 
 ## Inputs
 

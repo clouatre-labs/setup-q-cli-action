@@ -1,0 +1,63 @@
+name: AI Analysis - Balanced Security
+on: [pull_request]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: clouatre-labs/setup-q-cli-action@v1
+        with:
+          enable-sigv4: true
+          aws-region: us-east-1
+
+      - name: Generate Diff Stats
+        run: git diff --stat origin/${{ github.base_ref }}...HEAD > diff-stats.txt
+
+      - name: AI Analysis
+        run: |
+          echo "Review these changes:" > prompt.txt
+          cat diff-stats.txt >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > review.md
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ai-review
+          path: review.md
+
+  post:
+    needs: analyze
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: ai-review
+
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('review.md', 'utf8');
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
