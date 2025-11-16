@@ -11,51 +11,48 @@ GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/a
 
 ## Quick Start
 
-> [!WARNING]
-> AI tools can be manipulated via code comments and commit messages. This example analyzes diffs directly. See [examples/](examples/) for safer patterns.
+> [!NOTE]
+> This example uses the **safe pattern** (tool output analysis). For other security tiers, see [examples/](examples/).
 
 ```yaml
-name: AI Code Review
+name: AI Analysis
 on: [pull_request]
 
 permissions:
-  id-token: write      # Required for OIDC
+  id-token: write
   contents: read
-  pull-requests: write
 
 jobs:
-  review:
+  analyze:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Lint Code
+        run: |
+          pipx install uv
+          uv tool run ruff check --output-format=json . > lint.json || true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          fetch-depth: 0
-      
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
-      
+
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
-      
-      - name: Generate and post code review
+
+      - name: AI Analysis
         run: |
-          git diff origin/${{ github.base_ref }}...HEAD > changes.diff
-          qchat chat --no-interactive "Review this diff: $(cat changes.diff)" > review.md
-      
-      - uses: actions/github-script@v7
+          echo "Summarize these linting issues:" > prompt.txt
+          cat lint.json >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > analysis.md
+
+      - uses: actions/upload-artifact@v5
         with:
-          script: |
-            const fs = require('fs');
-            const review = fs.readFileSync('review.md', 'utf8');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `## AI Code Review\n\n${review}`
-            });
+          name: ai-analysis
+          path: analysis.md
 ```
 
 ## Features
@@ -209,29 +206,33 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@v5
+
+      - name: Lint Code
+        run: |
+          pipx install uv
+          uv tool run ruff check --output-format=json . > lint.json || true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
-      
+
       - uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
-      
-      - name: Scan files
+
+      - name: AI Analysis
         run: |
-          mkdir -p reports
-          find . -name "*.py" -o -name "*.js" | head -5 | while read file; do
-            qchat chat --no-interactive "Security review: $(cat $file)" >> reports/scan.txt
-            echo -e "\n---\n" >> reports/scan.txt
-          done
-      
-      - uses: actions/upload-artifact@v4
+          echo "Summarize these linting issues:" > prompt.txt
+          cat lint.json >> prompt.txt
+          qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > analysis.md
+
+      - uses: actions/upload-artifact@v5
         with:
-          name: security-scan
-          path: reports/
+          name: security-analysis
+          path: analysis.md
           retention-days: 30
 ```
 
