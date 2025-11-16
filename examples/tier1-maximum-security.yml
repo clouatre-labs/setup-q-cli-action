@@ -9,31 +9,34 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
 
       - name: Lint Code
         run: |
           pipx install uv
           uv tool run ruff check --output-format=json . > lint.json || true
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
-      - uses: clouatre-labs/setup-q-cli-action@v1
+      - name: Setup Q CLI
+        uses: clouatre-labs/setup-q-cli-action@v1
         with:
           enable-sigv4: true
           aws-region: us-east-1
 
-      - name: AI Analysis
+      - name: AI Analysis of Linter Output
         run: |
           echo "Summarize these linting issues:" > prompt.txt
           cat lint.json >> prompt.txt
           qchat chat --no-interactive "$(cat prompt.txt)" 2>/dev/null > analysis.md
 
-      - uses: actions/upload-artifact@v5
+      - name: Upload Analysis Artifact
+        uses: actions/upload-artifact@v5
         with:
           name: ai-analysis
           path: analysis.md
