@@ -325,6 +325,17 @@ If checksum verification fails:
 
 This is a composite action (YAML-based) with no compilation required.
 
+### Running Test Workflows
+
+To run the Q CLI test workflow (`.github/workflows/test-q-cli.yml`):
+
+```bash
+# Add AWS_ROLE_ARN secret to your repository
+gh secret set AWS_ROLE_ARN --body "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+```
+
+Requires OIDC provider configured (see Authentication Methods above).
+
 ### Testing Locally
 
 ```bash
