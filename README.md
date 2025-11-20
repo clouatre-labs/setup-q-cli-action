@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/clouatre-labs/setup-q-cli-action)](https://github.com/clouatre-labs/setup-q-cli-action/releases/latest)
 
-GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/aws/amazon-q-developer-cli) for use in workflows.
+GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/aws/amazon-q-developer-cli) (now [Kiro CLI](https://kiro.dev/docs/cli/)) for use in workflows.
 
 **Unofficial community action.** Not affiliated with or endorsed by Amazon Web Services (AWS). "Amazon Q" and "Amazon Web Services" are trademarks of AWS.
 
