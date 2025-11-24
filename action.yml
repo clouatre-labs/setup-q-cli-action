@@ -1,7 +1,6 @@
 name: 'Setup Q CLI'
 description: 'Install and cache Amazon Q Developer CLI for GitHub Actions workflows'
 author: 'Hugues Clouâtre'
-
 keywords:
   - ai
   - amazon-q
@@ -9,12 +8,11 @@ keywords:
   - aws
   - cli
   - automation
-
 inputs:
   version:
     description: 'Q CLI version to install (e.g., latest)'
     required: false
-    default: '1.19.6'
+    default: '1.19.7'
   aws-region:
     description: 'AWS region for Q CLI operations'
     required: false
@@ -27,7 +25,6 @@ inputs:
     description: 'Verify SHA256 checksum of downloaded binary'
     required: false
     default: 'false'
-
 outputs:
   q-version:
     description: 'Installed Q CLI version'
@@ -35,7 +32,6 @@ outputs:
   q-path:
     description: 'Path to Q CLI binary directory'
     value: ${{ steps.setup-path.outputs.path }}
-
 runs:
   using: 'composite'
   steps:
@@ -47,93 +43,29 @@ runs:
           echo "::error::Q CLI action only supports Linux runners. macOS binaries are not available via AWS CDN."
           exit 1
         fi
-
     - name: Cache Q CLI binaries
       id: cache-q
       uses: actions/cache@v4
       with:
         path: ~/.local/bin/qchat
         key: q-${{ inputs.version }}-${{ runner.os }}-${{ runner.arch }}
-
     - name: Install Q CLI
       id: install
       if: steps.cache-q.outputs.cache-hit != 'true'
       shell: bash
-      run: |
-        echo "::group::Installing Q CLI ${{ inputs.version }}"
-        mkdir -p ~/.local/bin
-        
-        # Determine architecture
-        ARCH="${{ runner.arch }}"
-        if [ "$ARCH" = "X64" ]; then
-          Q_ARCH="x86_64"
-        elif [ "$ARCH" = "ARM64" ]; then
-          Q_ARCH="aarch64"
-        else
-          echo "::error::Unsupported architecture: $ARCH"
-          exit 1
-        fi
-        
-        # AWS CDN expects version without 'v' prefix (e.g., '1.19.6' not 'v1.19.6')
-        VERSION="${{ inputs.version }}"
-        # Strip 'v' prefix if present
-        VERSION="${VERSION#v}"
-        
-        # Download URL (Linux only)
-        DOWNLOAD_URL="https://desktop-release.q.us-east-1.amazonaws.com/${VERSION}/q-${Q_ARCH}-linux.zip"
-        echo "Downloading from: $DOWNLOAD_URL"
-        
-        # Download and extract
-        curl --proto '=https' --tlsv1.2 -sSfL "$DOWNLOAD_URL" -o q.zip
-        
-        # Verify checksum if requested
-        if [ "${{ inputs.verify-checksum }}" = "true" ]; then
-          echo "Downloading SHA256 checksum..."
-          curl --proto '=https' --tlsv1.2 -sSfL "${DOWNLOAD_URL}.sha256" -o q.zip.sha256
-          
-          EXPECTED_SHA=$(cat q.zip.sha256)
-          ACTUAL_SHA=$(shasum -a 256 q.zip | cut -d' ' -f1)
-          
-          if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
-            echo "::error::SHA256 mismatch! Expected: $EXPECTED_SHA, Got: $ACTUAL_SHA"
-            exit 1
-          fi
-          echo "SHA256 verification passed"
-        fi
-        
-        unzip -q q.zip
-        
-        # Get actual version from BUILD-INFO if available
-        if [ -f q/BUILD-INFO ]; then
-          ACTUAL_VERSION=$(grep '^BUILD_VERSION=' q/BUILD-INFO | cut -d= -f2)
-          echo "version=${ACTUAL_VERSION}" >> $GITHUB_OUTPUT
-        else
-          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-        fi
-        
-        # Copy only qchat binary (sufficient for CI/CD)
-        cp q/bin/qchat ~/.local/bin/
-        chmod +x ~/.local/bin/qchat
-        
-        # Cleanup
-        rm -rf q q.zip
-        
-        echo "::endgroup::"
-
+      run: "echo \"::group::Installing Q CLI ${{ inputs.version }}\"\nmkdir -p ~/.local/bin\n\n# Determine architecture\nARCH=\"${{ runner.arch }}\"\nif [ \"$ARCH\" = \"X64\" ]; then\n  Q_ARCH=\"x86_64\"\nelif [ \"$ARCH\" = \"ARM64\" ]; then\n  Q_ARCH=\"aarch64\"\nelse\n  echo \"::error::Unsupported architecture: $ARCH\"\n  exit 1\nfi\n\n# AWS CDN expects version without 'v' prefix (e.g., '1.19.6' not 'v1.19.6')\nVERSION=\"${{ inputs.version }}\"\n# Strip 'v' prefix if present\nVERSION=\"${VERSION#v}\"\n\n# Download URL (Linux only)\nDOWNLOAD_URL=\"https://desktop-release.q.us-east-1.amazonaws.com/${VERSION}/q-${Q_ARCH}-linux.zip\"\necho \"Downloading from: $DOWNLOAD_URL\"\n\n# Download and extract\ncurl --proto '=https' --tlsv1.2 -sSfL \"$DOWNLOAD_URL\" -o q.zip\n\n# Verify checksum if requested\nif [ \"${{ inputs.verify-checksum }}\" = \"true\" ]; then\n  echo \"Downloading SHA256 checksum...\"\n  curl --proto '=https' --tlsv1.2 -sSfL \"${DOWNLOAD_URL}.sha256\" -o q.zip.sha256\n  \n  EXPECTED_SHA=$(cat q.zip.sha256)\n  ACTUAL_SHA=$(shasum -a 256 q.zip | cut -d' ' -f1)\n  \n  if [ \"$EXPECTED_SHA\" != \"$ACTUAL_SHA\" ]; then\n    echo \"::error::SHA256 mismatch! Expected: $EXPECTED_SHA, Got: $ACTUAL_SHA\"\n    exit 1\n  fi\n  echo \"SHA256 verification passed\"\nfi\n\nunzip -q q.zip\n\n# Get actual version from BUILD-INFO if available\nif [ -f q/BUILD-INFO ]; then\n  ACTUAL_VERSION=$(grep '^BUILD_VERSION=' q/BUILD-INFO | cut -d= -f2)\n  echo \"version=${ACTUAL_VERSION}\" >> $GITHUB_OUTPUT\nelse\n  echo \"version=${{ inputs.version }}\" >> $GITHUB_OUTPUT\nfi\n\n# Copy only qchat binary (sufficient for CI/CD)\ncp q/bin/qchat ~/.local/bin/\nchmod +x ~/.local/bin/qchat\n\n# Cleanup\nrm -rf q q.zip\n\necho \"::endgroup::\"\n"
     - name: Setup PATH
       id: setup-path
       shell: bash
       run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         echo "path=$HOME/.local/bin" >> $GITHUB_OUTPUT
-
     - name: Configure SIGV4 authentication
       if: inputs.enable-sigv4 == 'true'
       shell: bash
       run: |
         echo "AMAZON_Q_SIGV4=true" >> $GITHUB_ENV
         echo "AWS_REGION=${{ inputs.aws-region }}" >> $GITHUB_ENV
-
     - name: Verify installation
       shell: bash
       run: |
@@ -142,7 +74,6 @@ runs:
         echo "Installed binary:"
         ls -lh ~/.local/bin/qchat
         echo "::endgroup::"
-
 branding:
   icon: 'terminal'
   color: 'orange'
