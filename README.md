@@ -1,5 +1,20 @@
 # Setup Q CLI Action
 
+> [!WARNING]
+> **DEPRECATED:** Amazon Q Developer CLI has been rebranded to Kiro CLI. Please migrate to [setup-kiro-action](https://github.com/clouatre-labs/setup-kiro-action).
+>
+> ```yaml
+> # Before (deprecated)
+> - uses: clouatre-labs/setup-q-cli-action@v1
+> - run: qchat chat --no-interactive "prompt"
+>
+> # After (recommended)
+> - uses: clouatre-labs/setup-kiro-action@v1
+> - run: kiro-cli-chat chat --no-interactive "prompt"
+> ```
+>
+> This action will continue to work but will not receive updates.
+
 [![Test Action](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml/badge.svg)](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Setup%20Q%20CLI-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/setup-q-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

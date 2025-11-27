@@ -39,6 +39,11 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Deprecation warning
+      shell: bash
+      run: |
+        echo "::warning::DEPRECATED: This action is deprecated. Amazon Q Developer CLI has been rebranded to Kiro CLI. Please migrate to clouatre-labs/setup-kiro-action. See https://github.com/clouatre-labs/setup-kiro-action#migration-from-q-cli"
+
     - name: Check platform support
       shell: bash
       run: |
