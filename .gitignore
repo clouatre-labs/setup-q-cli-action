@@ -27,6 +27,7 @@ CLAUDE.md
 .codex/
 .cursor/
 .goose*
+.kiro/
 opencode.json
 .windsurf/
 
