@@ -13,19 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Run Linter
         run: pipx run ruff check --output-format=json . > lint.json || true
 
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@v1
+        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -48,7 +48,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Upload Analysis Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: tier1-analysis
           path: analysis.md
@@ -60,18 +60,18 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
 
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@v1
+        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -102,7 +102,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Upload Review Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: tier2-review
           path: review.md
@@ -113,16 +113,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@v1
+        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -146,7 +146,7 @@ jobs:
           fi
 
       - name: Upload All Results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: multiple-prompts
           path: |
