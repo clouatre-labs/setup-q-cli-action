@@ -8,30 +8,12 @@
     "dependencies"
   ],
   "dependencyDashboard": false,
-  "customManagers": [
-    {
-      "customType": "regex",
-      "fileMatch": [
-        "^action\\.yml$"
-      ],
-      "matchStrings": [
-        "default:\\s*['\"](?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]"
-      ],
-      "depNameTemplate": "aws/amazon-q-developer-cli",
-      "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.*)$"
-    }
-  ],
   "packageRules": [
     {
       "matchUpdateTypes": [
+        "major",
+        "minor",
         "patch"
-      ],
-      "automerge": true
-    },
-    {
-      "matchManagers": [
-        "github-actions"
       ],
       "automerge": true
     }
