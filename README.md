@@ -89,6 +89,7 @@ jobs:
 
 See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.  
 See [examples/](examples/) for different security tiers.
+See the [3-tier security model](https://clouatre.ca/posts/ai-augmented-cicd/) for defensive patterns in AI-augmented CI/CD.
 
 ## Inputs
 
@@ -335,6 +336,7 @@ MIT - See [LICENSE](LICENSE)
 - [Amazon Q Developer CLI](https://github.com/aws/amazon-q-developer-cli) - Official Q CLI repository (Apache 2.0)
 - [Q CLI Documentation](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html) - Official AWS documentation
 - [Setup Goose Action](https://github.com/clouatre-labs/setup-goose-action) - Similar action for Goose AI agent
+- [Setup Kiro Action](https://github.com/clouatre-labs/setup-kiro-action) - Similar action for Kiro CLI (AWS-native, SIGV4 auth)
 
 ## Acknowledgments
 
