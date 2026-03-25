@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write  # zizmor: ignore[overly-broad-permissions]
+  id-token: write  # zizmor: ignore[excessive-permissions]
   contents: read
 
 jobs:
