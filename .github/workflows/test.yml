@@ -3,9 +3,17 @@ name: Test Action
 on:
   push:
     branches: [main]
+    paths:
+      - 'action.yml'
+      - 'src/**'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -103,3 +111,18 @@ jobs:
         run: |
           qchat --version
           echo "Checksum verification passed"
+
+  ci-result:
+    name: CI Result
+    runs-on: ubuntu-24.04
+    if: always()
+    needs: [test-ubuntu-x64, test-cache, test-sigv4-config, test-checksum-verification]
+    permissions: {}
+    steps:
+      - name: Verify all jobs passed or were skipped
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more CI jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "All CI jobs passed or were skipped."
