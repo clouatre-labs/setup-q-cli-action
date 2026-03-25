@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
+  id-token: write  # zizmor: ignore[overly-broad-permissions]
   contents: read
 
 jobs:
@@ -77,9 +77,11 @@ jobs:
           aws-region: us-east-1
 
       - name: Generate Diff Stats
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --stat origin/${{ github.base_ref }}...HEAD > diff-stats.txt
+            git diff --stat origin/$BASE_REF...HEAD > diff-stats.txt
           else
             git diff --stat HEAD~1 HEAD > diff-stats.txt || echo "No previous commit" > diff-stats.txt
           fi
