@@ -1,7 +1,8 @@
 # Setup Q CLI Action
 
 > [!WARNING]
-> **DEPRECATED:** Amazon Q Developer CLI has been rebranded to Kiro CLI. Please migrate to [setup-kiro-action](https://github.com/clouatre-labs/setup-kiro-action).
+> **This action is deprecated.** The upstream [`aws/amazon-q-developer-cli`](https://github.com/aws/amazon-q-developer-cli) has been **archived by AWS**.
+> Migrate to [`clouatre-labs/setup-kiro-action`](https://github.com/clouatre-labs/setup-kiro-action), based on the replacement Kiro tooling.
 >
 > ```yaml
 > # Before (deprecated)
