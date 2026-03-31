@@ -18,7 +18,7 @@
 
 [![Test Action](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml/badge.svg)](https://github.com/clouatre-labs/setup-q-cli-action/actions/workflows/test.yml)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Setup%20Q%20CLI-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=github)](https://github.com/marketplace/actions/setup-q-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/clouatre-labs/setup-q-cli-action)](https://github.com/clouatre-labs/setup-q-cli-action/releases/latest)
 
 GitHub Action to install and cache [Amazon Q Developer CLI](https://github.com/aws/amazon-q-developer-cli) (now [Kiro CLI](https://kiro.dev/docs/cli/)) for use in workflows.
@@ -330,7 +330,7 @@ Contributions are welcome! Please open an issue or PR.
 
 ## License
 
-MIT - See [LICENSE](LICENSE)
+Apache 2.0. See [LICENSE](LICENSE).
 
 ## Related
 
