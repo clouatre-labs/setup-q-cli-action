@@ -6,7 +6,7 @@
 >
 > ```yaml
 > # Before (deprecated)
-> - uses: clouatre-labs/setup-q-cli-action@v1
+> - uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
 > - run: qchat chat --no-interactive "prompt"
 >
 > # After (recommended)
@@ -57,7 +57,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@v1
+        uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -182,7 +182,7 @@ permissions:
     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
     aws-region: us-east-1
 
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
   with:
     enable-sigv4: true  # Required with OIDC
 ```
@@ -198,7 +198,7 @@ permissions:
 For local testing or non-GitHub CI/CD environments.
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
   # Do NOT set enable-sigv4 with long-lived credentials
 
 - name: Use Q CLI
@@ -216,7 +216,7 @@ For local testing or non-GitHub CI/CD environments.
 ### Pin to Specific Version
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
   with:
     version: '1.18.0'  # Use any specific version
     verify-checksum: true  # Recommended for production
@@ -228,7 +228,7 @@ This action defaults to a tested version that's automatically updated weekly.
 
 **Pin to a specific version:**
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
   with:
     version: '1.18.0'
 ```
@@ -261,7 +261,7 @@ Example: `q-latest-Linux-X64`
 Ensure you're using the action before attempting to run `qchat`:
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60  # v1.0.2
 - run: qchat --version  # This will work
 ```
 
