@@ -25,7 +25,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
+        uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -71,7 +71,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
+        uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -124,7 +124,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@06c9a8f05e21c5a7b9860b6a9a96621e861c4fa7 # v1
+        uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
         with:
           enable-sigv4: true
           aws-region: us-east-1

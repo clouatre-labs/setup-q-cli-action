@@ -6,11 +6,11 @@
 >
 > ```yaml
 > # Before (deprecated)
-> - uses: clouatre-labs/setup-q-cli-action@v1
+> - uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
 > - run: qchat chat --no-interactive "prompt"
 >
 > # After (recommended)
-> - uses: clouatre-labs/setup-kiro-action@v1
+> - uses: clouatre-labs/setup-kiro-action@91393ee22956aee30d31f53abc8d37ac69e02102 # v1.0.1
 > - run: kiro-cli-chat chat --no-interactive "prompt"
 > ```
 >
@@ -45,19 +45,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Run Linter
         run: pipx run ruff check --output-format=json . > lint.json || true
 
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Setup Q CLI
-        uses: clouatre-labs/setup-q-cli-action@v1
+        uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
         with:
           enable-sigv4: true
           aws-region: us-east-1
@@ -69,7 +69,7 @@ jobs:
           qchat chat --no-interactive "$(cat prompt.txt)" > analysis.md
 
       - name: Upload Analysis Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: ai-analysis
           path: analysis.md
@@ -177,12 +177,12 @@ aws iam create-open-id-connect-provider \
 permissions:
   id-token: write  # Required for OIDC
 
-- uses: aws-actions/configure-aws-credentials@v5
+- uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
   with:
     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
     aws-region: us-east-1
 
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
   with:
     enable-sigv4: true  # Required with OIDC
 ```
@@ -198,7 +198,7 @@ permissions:
 For local testing or non-GitHub CI/CD environments.
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
   # Do NOT set enable-sigv4 with long-lived credentials
 
 - name: Use Q CLI
@@ -216,7 +216,7 @@ For local testing or non-GitHub CI/CD environments.
 ### Pin to Specific Version
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
   with:
     version: '1.18.0'  # Use any specific version
     verify-checksum: true  # Recommended for production
@@ -228,7 +228,7 @@ This action defaults to a tested version that's automatically updated weekly.
 
 **Pin to a specific version:**
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
   with:
     version: '1.18.0'
 ```
@@ -261,7 +261,7 @@ Example: `q-latest-Linux-X64`
 Ensure you're using the action before attempting to run `qchat`:
 
 ```yaml
-- uses: clouatre-labs/setup-q-cli-action@v1
+- uses: clouatre-labs/setup-q-cli-action@77815c314407491b506960825dc8bd8fa517ce60 # v1.0.2
 - run: qchat --version  # This will work
 ```
 
