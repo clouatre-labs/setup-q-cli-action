@@ -10,7 +10,7 @@
 > - run: qchat chat --no-interactive "prompt"
 >
 > # After (recommended)
-> - uses: clouatre-labs/setup-kiro-action@v1
+> - uses: clouatre-labs/setup-kiro-action@91393ee22956aee30d31f53abc8d37ac69e02102  # v1.0.1
 > - run: kiro-cli-chat chat --no-interactive "prompt"
 > ```
 >
