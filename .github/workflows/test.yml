@@ -21,7 +21,7 @@ permissions:
 jobs:
   test-ubuntu-x64:
     name: Test on Ubuntu x64
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -45,7 +45,7 @@ jobs:
 
   test-cache:
     name: Test caching
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -69,7 +69,7 @@ jobs:
 
   test-sigv4-config:
     name: Test SIGV4 configuration
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -96,7 +96,7 @@ jobs:
 
   test-checksum-verification:
     name: Test SHA256 verification
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -114,7 +114,7 @@ jobs:
 
   zizmor:
     name: zizmor
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -127,7 +127,7 @@ jobs:
 
   ci-result:
     name: CI Result
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: always()
     needs: [test-ubuntu-x64, test-cache, test-sigv4-config, test-checksum-verification, zizmor]
     permissions: {}
