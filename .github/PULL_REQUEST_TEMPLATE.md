@@ -38,4 +38,3 @@
 - [ ] No secrets, credentials, or PII introduced
 - [ ] No unrelated changes introduced
 - [ ] I have reviewed every line in this PR and can explain it
-- [ ] <!-- If AI-assisted: No hallucinated APIs, invented behaviour, or unverified assumptions -->
